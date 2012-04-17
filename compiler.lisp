@@ -5,6 +5,7 @@
 ;; (eval `(progn ,@(traverse-ast *parsed-js* nil)))
 
 
+
 ;; Engine
 (defparameter *tokens-table* (make-hash-table))
 
@@ -21,19 +22,28 @@
 			 (cons (process-token (first list))
 			       acc)))))
 
+;; utils
+;; TODO: should make all strs uppercase
+(defun mk-symbol (str)
+  (intern str))
+
+(defun mk-operator (str)
+  (intern str))
+
+
+
 ;; Tokens
 
-
 (defun var-token (var-definition)
-  `(setf ,(intern (first (first var-definition)))
+  `(setf ,(mk-symbol (first (first var-definition)))
 	 ,(third  (first var-definition))))
 
 (defparameter *current-block* nil)
 
 (defun defun-token (name params-list body)
-  (let ((*current-block* (intern name)))
-    `(defun ,(intern name) ,(mapcar (lambda (x)
-				      (intern x))
+  (let ((*current-block* (mk-symbol name)))
+    `(defun ,(mk-symbol name) ,(mapcar (lambda (x)
+				      (mk-symbol x))
 				    params-list)
        ,@(traverse-ast body nil))))
 
@@ -42,7 +52,7 @@
      ,@(traverse-ast (list body) nil)))
 
 (defun binary-token (operator param1 param2)
-  `(funcall ',(intern (symbol-name operator))
+  `(funcall ',(mk-operator (symbol-name operator))
 	    ,@(traverse-ast (list param1) nil)
 	    ,@(traverse-ast (list param2) nil)))
 
@@ -51,7 +61,7 @@
 	  (list ,@(traverse-ast fun-params nil))))
 
 (defun name-token (name)
-  (intern name))
+  (mk-symbol name))
 
 (setf (gethash :var    *tokens-table*) #'var-token)
 (setf (gethash :defun  *tokens-table*) #'defun-token)
