@@ -1,11 +1,5 @@
 (asdf:operate 'asdf:load-op 'parse-js)
 
- (defparameter *parsed-js* (second
- 			   (with-open-file (js-file "~/code/reactor/js-benchmark/sample.js")
- 			     (parse-js:parse-js js-file))))
-
-(eval `(progn ,@(traverse-ast *parsed-js* nil)))
-
 
 
 ;; Engine
@@ -24,8 +18,9 @@
 			 (cons (process-token (first list))
 			       acc)))))
 
-;; utils
-;; TODO: should make all strs uppercase
+
+
+;; Utils
 (defun mk-symbol (str)
   (intern (string-upcase str)))
 
@@ -35,49 +30,48 @@
 
 
 ;; Tokens
-
 (defmacro def-token (token-name params &body body)
   (let ((symbol (gensym)))
     `(let ((,symbol (lambda ,params ,@body)))
        (setf (gethash ,token-name *tokens-table*) ,symbol))))
 
-'(def-token :binary (operator param1 param2)
-  `(funcall ',(mk-operator (symbol-name operator))
-	    ,@(traverse-ast (list param1) nil)
-	    ,@(traverse-ast (list param2) nil)))
-
-(defun var-token (var-definition)
+(def-token :var (var-definition)
   `(setf ,(mk-symbol (first (first var-definition)))
 	 ,(third  (first var-definition))))
 
 (defparameter *current-block* nil)
 
-(defun defun-token (name params-list body)
+(def-token :defun (name params-list body)
   (let ((*current-block* (mk-symbol name)))
     `(defun ,(mk-symbol name) ,(mapcar (lambda (x)
 				      (mk-symbol x))
 				    params-list)
        ,@(traverse-ast body nil))))
 
-(defun return-token (body)
+(def-token :return (body)
   `(return-from ,*current-block*
      ,@(traverse-ast (list body) nil)))
 
-(defun binary-token (operator param1 param2)
+(def-token :binary (operator param1 param2)
   `(funcall ',(mk-operator (symbol-name operator))
 	    ,@(traverse-ast (list param1) nil)
 	    ,@(traverse-ast (list param2) nil)))
 
-(defun call-token (fun-name fun-params)
+(def-token :call (fun-name fun-params)
   `(apply ',@(traverse-ast (list fun-name) nil)
 	  (list ,@(traverse-ast fun-params nil))))
 
-(defun name-token (name)
+(def-token :name (name)
   (mk-symbol name))
 
-(setf (gethash :var    *tokens-table*) #'var-token)
-(setf (gethash :defun  *tokens-table*) #'defun-token)
-(setf (gethash :return *tokens-table*) #'return-token)
-(setf (gethash :binary *tokens-table*) #'binary-token)
-(setf (gethash :call   *tokens-table*) #'call-token)
-(setf (gethash :name   *tokens-table*) #'name-token)
+(def-token :stat (fun-call)
+  (first (traverse-ast (list fun-call) nil)))
+
+
+
+;; Test
+(defparameter *parsed-js* (second
+ 			   (with-open-file (js-file "~/code/reactor/js-benchmark/sample.js")
+ 			     (parse-js:parse-js js-file))))
+
+(eval `(progn ,@(traverse-ast *parsed-js* nil)))
