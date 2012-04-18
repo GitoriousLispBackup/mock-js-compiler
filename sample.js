@@ -13,3 +13,8 @@ function calculation( x, y )
     add( 4, 6 );
     return add( x, y ) + c + 100;
 }
+
+function display_message()
+{
+    print( "mememe" );
+}

@@ -70,6 +70,9 @@
 (def-token :num (val)
   val)
 
+(def-token :string (val)
+  val)
+
   
 
 
