@@ -67,6 +67,9 @@
 (def-token :stat (fun-call)
   (first (traverse-ast (list fun-call) nil)))
 
+(def-token :num (val)
+  val)
+
 
 
 ;; Test
