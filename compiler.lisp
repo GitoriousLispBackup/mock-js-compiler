@@ -70,11 +70,21 @@
 (def-token :num (val)
   val)
 
+  
+
+
+
+;; Fancy things
+(defmacro compile-js (js-file-name)
+  "Compiles all code in the js-file-name and executes top-level forms.
+Symbols are placed to the current package"
+  (with-open-file (file js-file-name)
+    (let ((parsed (second (parse-js:parse-js file))))
+      `(progn ,@(traverse-ast parsed nil)))))
+
+
+
 
 
 ;; Test
-(defparameter *parsed-js* (second
- 			   (with-open-file (js-file "~/code/reactor/js-benchmark/sample.js")
- 			     (parse-js:parse-js js-file))))
-
-(eval `(progn ,@(traverse-ast *parsed-js* nil)))
+(compile-js "~/code/reactor/js-benchmark/sample.js")

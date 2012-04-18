@@ -11,5 +11,5 @@ function calculation( x, y )
     var c = 22;
     add( 2, 5 );
     add( 4, 6 );
-    return add( x, y ) + c;
+    return add( x, y ) + c + 100;
 }
