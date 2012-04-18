@@ -1,8 +1,10 @@
-;; (defparameter *parsed-js* (second
-;; 			   (with-open-file (js-file "~/code/reactor/js-benchmark/sample.js")
-;; 			     (parse-js:parse-js js-file))))
+(asdf:operate 'asdf:load-op 'parse-js)
 
-;; (eval `(progn ,@(traverse-ast *parsed-js* nil)))
+ (defparameter *parsed-js* (second
+ 			   (with-open-file (js-file "~/code/reactor/js-benchmark/sample.js")
+ 			     (parse-js:parse-js js-file))))
+
+(eval `(progn ,@(traverse-ast *parsed-js* nil)))
 
 
 
@@ -25,7 +27,7 @@
 ;; utils
 ;; TODO: should make all strs uppercase
 (defun mk-symbol (str)
-  (intern str))
+  (intern (string-upcase str)))
 
 (defun mk-operator (str)
   (intern str))
@@ -33,6 +35,16 @@
 
 
 ;; Tokens
+
+(defmacro def-token (token-name params &body body)
+  (let ((symbol (gensym)))
+    `(let ((,symbol (lambda ,params ,@body)))
+       (setf (gethash ,token-name *tokens-table*) ,symbol))))
+
+'(def-token :binary (operator param1 param2)
+  `(funcall ',(mk-operator (symbol-name operator))
+	    ,@(traverse-ast (list param1) nil)
+	    ,@(traverse-ast (list param2) nil)))
 
 (defun var-token (var-definition)
   `(setf ,(mk-symbol (first (first var-definition)))
