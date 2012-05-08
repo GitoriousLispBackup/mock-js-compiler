@@ -31,9 +31,7 @@
 
 ;; Tokens
 (defmacro def-token (token-name params &body body)
-  (let ((symbol (gensym)))
-    `(let ((,symbol (lambda ,params ,@body)))
-       (setf (gethash ,token-name *tokens-table*) ,symbol))))
+  `(setf (gethash ,token-name *tokens-table*) (lambda ,params ,@body)))
 
 (def-token :var (var-definition)
   `(setf ,(mk-symbol (first (first var-definition)))
@@ -90,4 +88,4 @@ Symbols are placed to the current package"
 
 
 ;; Test
-(compile-js "~/code/reactor/js-benchmark/sample.js")
+(compile-js "sample.js")
